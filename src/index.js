@@ -10,19 +10,64 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const user = users.find(user => user.username === username);
+
+  if (!user) {
+    return response.status(404).json();
+  }
+
+  request.user = user;
+  return next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+
+  if (user.todos.length >= 10 && !user.pro) {
+    return response.status(403).json({ error: 'Limit exceeded for free' })
+  }
+
+  return next();
+
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id } = request.params;
+
+  const user = users.find(user => user.username === username);
+
+  if (user) {
+    if (validate(id)) {
+      user.todos.forEach(todo => {
+        if (todo.id === id) {
+          request.todo = todo;
+          request.user = user;
+          return next();
+        } else {
+          return response.status(404).json({ error: 'card nao encontrado' })
+        }
+      })
+    } else {
+      return response.status(400).json();
+    }
+  }
+  return response.status(404).json({ error: 'usuário nao existe' });
+
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+
+  const user = users.find(user => user.id === id);
+
+  if (!user) {
+    return response.status(404).json();
+  }
+
+  request.user = user;
+  return next();
 }
 
 app.post('/users', (request, response) => {
